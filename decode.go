@@ -19,9 +19,7 @@ type Imagefile struct {
 }
 
 func (i Imagefile) ColorModel() color.Model {
-	return color.ModelFunc(func(c color.Color) color.Color {
-		return c
-	})
+	return color.RGBAModel
 }
 func (i Imagefile) Bounds() image.Rectangle {
 	return image.Rect(0, 0, int(i.Width), int(i.Height))
@@ -31,40 +29,36 @@ func (i Imagefile) At(x, y int) color.Color {
 }
 
 type Color struct {
-	R byte // Red
-	G byte // Green
-	B byte // Blue
-	A byte // Alpha
+	R uint32 // Red
+	G uint32 // Green
+	B uint32 // Blue
+	A uint32 // Alpha
 }
 
 func (c Color) RGBA() (r, g, b, a uint32) {
-	r = uint32(c.R)
-	g = uint32(c.G)
-	b = uint32(c.B)
-	a = uint32(c.A)
-
-	return
+	return c.R, c.G, c.B, c.A
 }
 
 func Decode(r io.Reader) (image.Image, error) {
 	var img Imagefile
-	b := bufio.NewReader(r)
+	bb := bufio.NewReader(r)
 
-	io.CopyN(ioutil.Discard, b, 9)
+	io.CopyN(ioutil.Discard, bb, 9)
 
-	binary.Read(b, binary.BigEndian, &img.Width)
-	binary.Read(b, binary.BigEndian, &img.Height)
+	binary.Read(bb, binary.BigEndian, &img.Width)
+	binary.Read(bb, binary.BigEndian, &img.Height)
+
 	img.Buf = make([][]Color, img.Height)
+	for y := range img.Buf {
+		img.Buf[y] = make([]Color, img.Width)
+		for x := range img.Buf[y] {
+			var r, g, b, a byte
+			binary.Read(bb, binary.BigEndian, &r)
+			binary.Read(bb, binary.BigEndian, &g)
+			binary.Read(bb, binary.BigEndian, &b)
+			binary.Read(bb, binary.BigEndian, &a)
 
-	for i := range img.Buf {
-		img.Buf[i] = make([]Color, img.Width)
-		for j := range img.Buf[i] {
-			c := make([]byte, 4)
-			_, err := b.Read(c)
-			if err != nil {
-				return nil, err
-			}
-			img.Buf[i][j] = Color{c[0], c[1], c[2], c[3]}
+			img.Buf[y][x] = Color{uint32(r), uint32(g), uint32(b), uint32(a)}
 		}
 	}
 
