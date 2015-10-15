@@ -25,6 +25,9 @@ func (i Imagefile) Bounds() image.Rectangle {
 	return image.Rect(0, 0, int(i.Width), int(i.Height))
 }
 func (i Imagefile) At(x, y int) color.Color {
+	if !(image.Point{x, y}.In(i.Bounds())) {
+		return color.RGBA{}
+	}
 	return i.Buf[y][x]
 }
 
