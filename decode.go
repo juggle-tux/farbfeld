@@ -29,14 +29,14 @@ func (i Imagefile) At(x, y int) color.Color {
 }
 
 type Color struct {
-	R uint32 // Red
-	G uint32 // Green
-	B uint32 // Blue
-	A uint32 // Alpha
+	R byte // Red
+	G byte // Green
+	B byte // Blue
+	A byte // Alpha
 }
 
 func (c Color) RGBA() (r, g, b, a uint32) {
-	return c.R, c.G, c.B, c.A
+	return uint32(c.R), uint32(c.G), uint32(c.B), uint32(c.A)
 }
 
 func Decode(r io.Reader) (image.Image, error) {
@@ -58,7 +58,7 @@ func Decode(r io.Reader) (image.Image, error) {
 			binary.Read(bb, binary.BigEndian, &b)
 			binary.Read(bb, binary.BigEndian, &a)
 
-			img.Buf[y][x] = Color{uint32(r), uint32(g), uint32(b), uint32(a)}
+			img.Buf[y][x] = Color{r, g, b, a}
 		}
 	}
 
