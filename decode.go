@@ -45,21 +45,13 @@ func Decode(r io.Reader) (image.Image, error) {
 	for y := range img.Buf {
 		img.Buf[y] = make([]color.RGBA, img.Width)
 		for x := range img.Buf[y] {
-			var r, g, b, a byte
-			if err := binary.Read(bb, binary.BigEndian, &r); err != nil {
+			rgba := make([]byte, 4)
+			if _, err := io.ReadFull(bb, rgba); err == io.EOF {
+				return nil, io.ErrUnexpectedEOF
+			} else if err != nil {
 				return nil, err
 			}
-			if err := binary.Read(bb, binary.BigEndian, &g); err != nil {
-				return nil, err
-			}
-			if err := binary.Read(bb, binary.BigEndian, &b); err != nil {
-				return nil, err
-			}
-			if err := binary.Read(bb, binary.BigEndian, &a); err != nil {
-				return nil, err
-			}
-
-			img.Buf[y][x] = color.RGBA{r, g, b, a}
+			img.Buf[y][x] = color.RGBA{rgba[0], rgba[1], rgba[2], rgba[3]}
 		}
 	}
 
