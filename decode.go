@@ -15,7 +15,7 @@ import (
 type Imagefile struct {
 	Width  uint32
 	Height uint32
-	Buf    [][]Color // Buf[y][x]
+	Buf    [][]color.RGBA // Buf[y][x]
 }
 
 func (i Imagefile) ColorModel() color.Model {
@@ -28,17 +28,6 @@ func (i Imagefile) At(x, y int) color.Color {
 	return i.Buf[y][x]
 }
 
-type Color struct {
-	R byte // Red
-	G byte // Green
-	B byte // Blue
-	A byte // Alpha
-}
-
-func (c Color) RGBA() (r, g, b, a uint32) {
-	return uint32(c.R), uint32(c.G), uint32(c.B), uint32(c.A)
-}
-
 func Decode(r io.Reader) (image.Image, error) {
 	var img Imagefile
 	bb := bufio.NewReader(r)
@@ -48,9 +37,9 @@ func Decode(r io.Reader) (image.Image, error) {
 	binary.Read(bb, binary.BigEndian, &img.Width)
 	binary.Read(bb, binary.BigEndian, &img.Height)
 
-	img.Buf = make([][]Color, img.Height)
+	img.Buf = make([][]color.RGBA, img.Height)
 	for y := range img.Buf {
-		img.Buf[y] = make([]Color, img.Width)
+		img.Buf[y] = make([]color.RGBA, img.Width)
 		for x := range img.Buf[y] {
 			var r, g, b, a byte
 			binary.Read(bb, binary.BigEndian, &r)
@@ -58,7 +47,7 @@ func Decode(r io.Reader) (image.Image, error) {
 			binary.Read(bb, binary.BigEndian, &b)
 			binary.Read(bb, binary.BigEndian, &a)
 
-			img.Buf[y][x] = Color{r, g, b, a}
+			img.Buf[y][x] = color.RGBA{r, g, b, a}
 		}
 	}
 
