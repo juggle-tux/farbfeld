@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"image"
 	"image/color"
+	"io"
 	"testing"
 )
 
@@ -49,6 +50,43 @@ func TestDecode(t *testing.T) {
 		if gr != wr || gg != wg || gb != wb || ga != wa {
 			t.Fatalf(`[%d] m.At(tt.x, tt.y).RGBA() = %v, want %v`, i, got, tt.c)
 		}
+	}
+}
+
+func TestDecode_withBlankImagefile(t *testing.T) {
+	_, err := Decode(bytes.NewReader([]byte{}))
+	if err == nil {
+		t.Fatalf(`expected error`)
+	}
+
+	if err != io.ErrUnexpectedEOF {
+		t.Fatalf(`err = %v, want io.ErrUnexpectedEOF`, err)
+	}
+}
+
+func TestDecode_withInvalidImagefile(t *testing.T) {
+	_, err := Decode(bytes.NewReader([]byte("invalid-imagefile")))
+	if err == nil {
+		t.Fatalf(`expected error`)
+	}
+
+	if err.Error() != "invalid Imagefile format: unexpected magic number" {
+		t.Fatalf(`unexpected error: %v`, err)
+	}
+}
+
+func TestDecodeConfig(t *testing.T) {
+	dc, err := DecodeConfig(nil)
+	if err != nil {
+		t.Fatalf(`unexpected error: %v`, err)
+	}
+
+	if got, want := dc.Width, 0; got != want {
+		t.Fatalf(`dc.Width = %d, want %d`, got, want)
+	}
+
+	if got, want := dc.Height, 0; got != want {
+		t.Fatalf(`dc.Height = %d, want %d`, got, want)
 	}
 }
 
