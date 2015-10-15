@@ -5,19 +5,33 @@ package imagefile
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/binary"
 	"image"
 	"image/color"
 	"io"
-	"io/ioutil"
 )
+
+const imagefileHeader = "imagefile"
+
+// A FormatError reports that the input is not a valid Imagefile.
+type FormatError string
+
+func (e FormatError) Error() string {
+	return "invalid Imagefile format: " + string(e)
+}
 
 // Decode reads a Imagefile image from r and returns it as an image.Image.
 func Decode(r io.Reader) (image.Image, error) {
 	bb := bufio.NewReader(r)
+	magic := new(bytes.Buffer)
 
-	if _, err := io.CopyN(ioutil.Discard, bb, 9); err != nil {
-		return nil, err
+	if _, err := io.CopyN(magic, bb, 9); err != nil {
+		return nil, io.ErrUnexpectedEOF
+	}
+
+	if magic.String() != imagefileHeader {
+		return nil, FormatError("unexpected magic number")
 	}
 
 	var (
