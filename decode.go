@@ -34,18 +34,30 @@ func Decode(r io.Reader) (image.Image, error) {
 
 	io.CopyN(ioutil.Discard, bb, 9)
 
-	binary.Read(bb, binary.BigEndian, &img.Width)
-	binary.Read(bb, binary.BigEndian, &img.Height)
+	if err := binary.Read(bb, binary.BigEndian, &img.Width); err != nil {
+		return nil, err
+	}
+	if err := binary.Read(bb, binary.BigEndian, &img.Height); err != nil {
+		return nil, err
+	}
 
 	img.Buf = make([][]color.RGBA, img.Height)
 	for y := range img.Buf {
 		img.Buf[y] = make([]color.RGBA, img.Width)
 		for x := range img.Buf[y] {
 			var r, g, b, a byte
-			binary.Read(bb, binary.BigEndian, &r)
-			binary.Read(bb, binary.BigEndian, &g)
-			binary.Read(bb, binary.BigEndian, &b)
-			binary.Read(bb, binary.BigEndian, &a)
+			if err := binary.Read(bb, binary.BigEndian, &r); err != nil {
+				return nil, err
+			}
+			if err := binary.Read(bb, binary.BigEndian, &g); err != nil {
+				return nil, err
+			}
+			if err := binary.Read(bb, binary.BigEndian, &b); err != nil {
+				return nil, err
+			}
+			if err := binary.Read(bb, binary.BigEndian, &a); err != nil {
+				return nil, err
+			}
 
 			img.Buf[y][x] = color.RGBA{r, g, b, a}
 		}
