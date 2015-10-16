@@ -2,15 +2,19 @@ package imagefile
 
 import (
 	"encoding/binary"
-	"errors"
 	"image"
 	"image/color"
 	"io"
 )
 
-// ErrNoMagic is returned by Decode and DecodeConfig when the image header
+// A FormatError reports that the input is not a valid Imagefile.
+// It is returned by Decode and DecodeConfig when the image header
 // doesn't start with "imagefile".
-var ErrNoMagic = errors.New("no magic")
+type FormatError string
+
+func (e FormatError) Error() string {
+	return "invalid Imagefile format: " + string(e)
+}
 
 func decodeConfig(r io.Reader) (int, int, error) {
 	header := make([]byte, 9+4+4)
@@ -20,7 +24,7 @@ func decodeConfig(r io.Reader) (int, int, error) {
 	}
 
 	if string(header[:9]) != "imagefile" {
-		return 0, 0, ErrNoMagic
+		return 0, 0, FormatError("unexpected magic number")
 	}
 
 	w := binary.BigEndian.Uint32(header[9:])

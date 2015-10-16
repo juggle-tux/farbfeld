@@ -26,8 +26,8 @@ func TestDecodeConfig(t *testing.T) {
 
 func TestDecodeConfigRejectsInvalidMagic(t *testing.T) {
 	_, err := DecodeConfig(strings.NewReader("imagefil\xff\x00\x00\x00\x03\x00\x00\x00\x03"))
-	if err != ErrNoMagic {
-		t.Errorf("expected ErrNoMagic error, got %v", err)
+	if _, ok := err.(FormatError); !ok {
+		t.Errorf("expected FormatError error, got %v", err)
 	}
 }
 
@@ -83,8 +83,8 @@ func TestDecode(t *testing.T) {
 
 func TestDecodeRejectsInvalidMagic(t *testing.T) {
 	_, err := Decode(strings.NewReader("imagefil\xff\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00"))
-	if err != ErrNoMagic {
-		t.Errorf("expected ErrNoMagic error, got %v", err)
+	if _, ok := err.(FormatError); !ok {
+		t.Errorf("expected FormatError error, got %v", err)
 	}
 }
 
