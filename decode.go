@@ -5,61 +5,67 @@ package imagefile
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/binary"
 	"image"
 	"image/color"
 	"io"
-	"io/ioutil"
 )
 
-type Imagefile struct {
-	Width  uint32
-	Height uint32
-	Buf    [][]color.RGBA // Buf[y][x]
+const imagefileHeader = "imagefile"
+
+// A FormatError reports that the input is not a valid Imagefile.
+type FormatError string
+
+func (e FormatError) Error() string {
+	return "invalid Imagefile format: " + string(e)
 }
 
-func (i Imagefile) ColorModel() color.Model {
-	return color.RGBAModel
-}
-func (i Imagefile) Bounds() image.Rectangle {
-	return image.Rect(0, 0, int(i.Width), int(i.Height))
-}
-func (i Imagefile) At(x, y int) color.Color {
-	if !(image.Point{x, y}.In(i.Bounds())) {
-		return color.RGBA{}
-	}
-	return i.Buf[y][x]
-}
-
+// Decode reads a Imagefile image from r and returns it as an image.Image.
 func Decode(r io.Reader) (image.Image, error) {
-	var img Imagefile
 	bb := bufio.NewReader(r)
+	magic := new(bytes.Buffer)
 
-	io.CopyN(ioutil.Discard, bb, 9)
-
-	if err := binary.Read(bb, binary.BigEndian, &img.Width); err != nil {
-		return nil, err
-	}
-	if err := binary.Read(bb, binary.BigEndian, &img.Height); err != nil {
-		return nil, err
+	if _, err := io.CopyN(magic, bb, 9); err != nil {
+		return nil, io.ErrUnexpectedEOF
 	}
 
-	img.Buf = make([][]color.RGBA, img.Height)
-	for y := range img.Buf {
-		img.Buf[y] = make([]color.RGBA, img.Width)
-		for x := range img.Buf[y] {
+	if magic.String() != imagefileHeader {
+		return nil, FormatError("unexpected magic number")
+	}
+
+	var (
+		width  uint32
+		height uint32
+	)
+
+	if err := binary.Read(bb, binary.BigEndian, &width); err != nil {
+		return nil, err
+	}
+	if err := binary.Read(bb, binary.BigEndian, &height); err != nil {
+		return nil, err
+	}
+
+	w := int(width)
+	h := int(height)
+
+	img := image.NewRGBA(image.Rect(0, 0, w, h))
+
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; x++ {
 			rgba := make([]byte, 4)
+
 			if _, err := io.ReadFull(bb, rgba); err == io.EOF {
 				return nil, io.ErrUnexpectedEOF
 			} else if err != nil {
 				return nil, err
 			}
-			img.Buf[y][x] = color.RGBA{rgba[0], rgba[1], rgba[2], rgba[3]}
+
+			img.Set(x, y, color.RGBA{rgba[0], rgba[1], rgba[2], rgba[3]})
 		}
 	}
 
 	return img, nil
-
 }
 
 // DecodeConfig returns an empty image.Config:
