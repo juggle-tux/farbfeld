@@ -1,77 +1,63 @@
-// Package imagefile enables reading and writing files
-// in the Suckless imagefile format:
-// http://git.2f30.org/imagefile/tree/SPECIFICATION.
 package imagefile
 
 import (
-	"bufio"
-	"bytes"
 	"encoding/binary"
+	"errors"
 	"image"
 	"image/color"
 	"io"
 )
 
-const imagefileHeader = "imagefile"
+// ErrNoMagic is returned by Decode and DecodeConfig when the image header
+// doesn't start with "imagefile".
+var ErrNoMagic = errors.New("no magic")
 
-// A FormatError reports that the input is not a valid Imagefile.
-type FormatError string
+func decodeConfig(r io.Reader) (int, int, error) {
+	header := make([]byte, 9+4+4)
+	_, err := io.ReadFull(r, header)
+	if err != nil {
+		return 0, 0, err
+	}
 
-func (e FormatError) Error() string {
-	return "invalid Imagefile format: " + string(e)
+	if string(header[:9]) != "imagefile" {
+		return 0, 0, ErrNoMagic
+	}
+
+	w := binary.BigEndian.Uint32(header[9:])
+	h := binary.BigEndian.Uint32(header[13:])
+
+	return int(w), int(h), nil
 }
 
-// Decode reads a Imagefile image from r and returns it as an image.Image.
+// Decode reads an imagefile image from r and returns it as an image.Image.
 func Decode(r io.Reader) (image.Image, error) {
-	bb := bufio.NewReader(r)
-	magic := new(bytes.Buffer)
-
-	if _, err := io.CopyN(magic, bb, 9); err != nil {
-		return nil, io.ErrUnexpectedEOF
-	}
-
-	if magic.String() != imagefileHeader {
-		return nil, FormatError("unexpected magic number")
-	}
-
-	var (
-		width  uint32
-		height uint32
-	)
-
-	if err := binary.Read(bb, binary.BigEndian, &width); err != nil {
+	w, h, err := decodeConfig(r)
+	if err != nil {
 		return nil, err
 	}
-	if err := binary.Read(bb, binary.BigEndian, &height); err != nil {
-		return nil, err
-	}
-
-	w := int(width)
-	h := int(height)
 
 	img := image.NewRGBA(image.Rect(0, 0, w, h))
-
-	for y := 0; y < h; y++ {
-		for x := 0; x < w; x++ {
-			rgba := make([]byte, 4)
-
-			if _, err := io.ReadFull(bb, rgba); err == io.EOF {
-				return nil, io.ErrUnexpectedEOF
-			} else if err != nil {
-				return nil, err
-			}
-
-			img.Set(x, y, color.RGBA{rgba[0], rgba[1], rgba[2], rgba[3]})
-		}
+	_, err = io.ReadFull(r, img.Pix)
+	if err != nil {
+		return nil, err
 	}
 
 	return img, nil
 }
 
-// DecodeConfig returns an empty image.Config:
-// imagefile has no configuration.
+// DecodeConfig returns the color model and dimensions of an imagefile image without
+// decoding the entire image.
 func DecodeConfig(r io.Reader) (image.Config, error) {
-	return image.Config{}, nil
+	w, h, err := decodeConfig(r)
+	if err != nil {
+		return image.Config{}, err
+	}
+
+	return image.Config{
+		ColorModel: color.RGBAModel,
+		Width:      w,
+		Height:     h,
+	}, nil
 }
 
 func init() {
