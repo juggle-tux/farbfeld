@@ -7,40 +7,38 @@ import (
 	"io"
 )
 
+// Encode writes the Image m to w in Imagefile format.
 func Encode(w io.Writer, m image.Image) error {
 	bb := bufio.NewWriter(w)
 	defer bb.Flush()
 
-	_, err := bb.WriteString("imagefile")
-	if err != nil {
+	if _, err := bb.WriteString(imagefileHeader); err != nil {
 		return err
 	}
 
 	b := m.Bounds()
-	width := uint32(b.Max.X - b.Min.X)
-	height := uint32(b.Max.Y - b.Min.Y)
-	if err := binary.Write(bb, binary.BigEndian, width); err != nil {
+
+	if err := binary.Write(bb, binary.BigEndian, uint32(b.Dx())); err != nil {
 		return err
 	}
-	if err := binary.Write(bb, binary.BigEndian, height); err != nil {
+	if err := binary.Write(bb, binary.BigEndian, uint32(b.Dy())); err != nil {
 		return err
 	}
 
 	for y := b.Min.Y; y < b.Max.Y; y++ {
 		for x := b.Min.X; x < b.Max.X; x++ {
 			r, g, b, a := m.At(x, y).RGBA()
-			r1, g1, b1, a1 := byte(r), byte(g), byte(b), byte(a)
 
-			if err := binary.Write(bb, binary.BigEndian, r1); err != nil {
+			if err := bb.WriteByte(byte(r)); err != nil {
 				return err
 			}
-			if err := binary.Write(bb, binary.BigEndian, g1); err != nil {
+			if err := bb.WriteByte(byte(g)); err != nil {
 				return err
 			}
-			if err := binary.Write(bb, binary.BigEndian, b1); err != nil {
+			if err := bb.WriteByte(byte(b)); err != nil {
 				return err
 			}
-			if err := binary.Write(bb, binary.BigEndian, a1); err != nil {
+			if err := bb.WriteByte(byte(a)); err != nil {
 				return err
 			}
 		}
