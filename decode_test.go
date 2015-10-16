@@ -5,109 +5,97 @@ import (
 	"image"
 	"image/color"
 	"io"
+	"strings"
 	"testing"
 )
 
-var (
-	r = color.RGBA{255, 0, 0, 255}
-	g = color.RGBA{0, 255, 0, 255}
-	b = color.RGBA{0, 0, 255, 255}
-
-	imagefileTestCases = []struct {
-		x int
-		y int
-		c color.RGBA
-	}{
-		{0, 0, r},
-		{0, 1, b},
-		{0, 2, g},
-		{1, 0, g},
-		{1, 1, r},
-		{1, 2, b},
-		{2, 0, b},
-		{2, 1, g},
-		{2, 2, r},
+func TestDecodeConfig(t *testing.T) {
+	config, err := DecodeConfig(bytes.NewReader(imageData))
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	imagefileData = []byte("imagefile" +
-		"\x00\x00\x00\x03\x00\x00\x00\x03\xff\x00\x00\xff\x00\xff\x00" +
-		"\xff\x00\x00\xff\xff\x00\x00\xff\xff\xff\x00\x00\xff\x00\xff" +
-		"\x00\xff\x00\xff\x00\xff\x00\x00\xff\xff\xff\x00\x00\xff")
-)
+	if config.ColorModel != color.RGBAModel {
+		t.Error("expected RGBA color model")
+	}
+
+	if config.Width != 3 || config.Height != 3 {
+		t.Errorf("want size %dx%d, got %dx%d", 3, 3, config.Width, config.Height)
+	}
+}
+
+func TestDecodeConfigRejectsInvalidMagic(t *testing.T) {
+	_, err := DecodeConfig(strings.NewReader("imagefil\xff\x00\x00\x00\x03\x00\x00\x00\x03"))
+	if err != ErrNoMagic {
+		t.Errorf("expected ErrNoMagic error, got %v", err)
+	}
+}
+
+func TestDecodeConfigRejectsTruncatedHeader(t *testing.T) {
+	_, err := DecodeConfig(strings.NewReader("imagefile\x00\x00\x00\x03\x00\x00\x00\x03"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = DecodeConfig(strings.NewReader("imagefile\x00\x00\x00\x03\x00\x00\x00"))
+	if err != io.ErrUnexpectedEOF {
+		t.Errorf("expected ErrUnexpectedEOF error, got %v", err)
+	}
+
+	_, err = DecodeConfig(strings.NewReader("imagefile\x00\x00\x00"))
+	if err != io.ErrUnexpectedEOF {
+		t.Errorf("expected ErrUnexpectedEOF error, got %v", err)
+	}
+}
+
+func colorsEqual(c, c2 color.Color) bool {
+	r, g, b, a := c.RGBA()
+	r2, g2, b2, a2 := c2.RGBA()
+	return r == r2 && g == g2 && b == b2 && a == a2
+}
 
 func TestDecode(t *testing.T) {
-	m, err := Decode(bytes.NewReader(imagefileData))
+	img, err := Decode(bytes.NewReader(imageData))
 	if err != nil {
-		t.Fatalf(`unexpected error: %v`, err)
+		t.Fatal(err)
 	}
 
-	for i, tt := range imagefileTestCases {
-		got := m.At(tt.x, tt.y)
+	if img.ColorModel() != color.RGBAModel {
+		t.Error("expected RGBA color model")
+	}
 
-		gr, gg, gb, ga := got.RGBA()
-		wr, wg, wb, wa := tt.c.RGBA()
+	bounds := img.Bounds()
+	want := image.Rect(0, 0, 3, 3)
+	if bounds != want {
+		t.Fatalf("want bounds %v, got %v", want, bounds)
+	}
 
-		if gr != wr || gg != wg || gb != wb || ga != wa {
-			t.Fatalf(`[%d] m.At(tt.x, tt.y).RGBA() = %v, want %v`, i, got, tt.c)
+	for x := 0; x < 3; x++ {
+		for y := 0; y < 3; y++ {
+			got := img.At(x, y)
+			want := imagePixels[y][x]
+			if !colorsEqual(got, want) {
+				t.Errorf("pixel at (%d,%d): want %v, got %v", x, y, want, got)
+			}
 		}
 	}
 }
 
-func TestDecode_withBlankImagefile(t *testing.T) {
-	_, err := Decode(bytes.NewReader([]byte{}))
-	if err == nil {
-		t.Fatalf(`expected error`)
+func TestDecodeRejectsInvalidMagic(t *testing.T) {
+	_, err := Decode(strings.NewReader("imagefil\xff\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00"))
+	if err != ErrNoMagic {
+		t.Errorf("expected ErrNoMagic error, got %v", err)
+	}
+}
+
+func TestDecodeRejectsTruncatedData(t *testing.T) {
+	_, err := Decode(strings.NewReader("imagefile\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00"))
+	if err != nil {
+		t.Fatal(err)
 	}
 
+	_, err = Decode(strings.NewReader("imagefile\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00"))
 	if err != io.ErrUnexpectedEOF {
-		t.Fatalf(`err = %v, want io.ErrUnexpectedEOF`, err)
-	}
-}
-
-func TestDecode_withInvalidImagefile(t *testing.T) {
-	_, err := Decode(bytes.NewReader([]byte("invalid-imagefile")))
-	if err == nil {
-		t.Fatalf(`expected error`)
-	}
-
-	if err.Error() != "invalid Imagefile format: unexpected magic number" {
-		t.Fatalf(`unexpected error: %v`, err)
-	}
-}
-
-func TestDecodeConfig(t *testing.T) {
-	dc, err := DecodeConfig(nil)
-	if err != nil {
-		t.Fatalf(`unexpected error: %v`, err)
-	}
-
-	if got, want := dc.Width, 0; got != want {
-		t.Fatalf(`dc.Width = %d, want %d`, got, want)
-	}
-
-	if got, want := dc.Height, 0; got != want {
-		t.Fatalf(`dc.Height = %d, want %d`, got, want)
-	}
-}
-
-func TestRegisteredFormat(t *testing.T) {
-	m, format, err := image.Decode(bytes.NewReader(imagefileData))
-	if err != nil {
-		t.Fatalf(`unexpected error: %v`, err)
-	}
-
-	if got, want := format, "imagefile"; got != want {
-		t.Fatalf(`format = %q, want %q`, got, want)
-	}
-
-	for i, tt := range imagefileTestCases {
-		got := m.At(tt.x, tt.y)
-
-		gr, gg, gb, ga := got.RGBA()
-		wr, wg, wb, wa := tt.c.RGBA()
-
-		if gr != wr || gg != wg || gb != wb || ga != wa {
-			t.Fatalf(`[%d] m.At(tt.x, tt.y).RGBA() = %v, want %v`, i, got, tt.c)
-		}
+		t.Errorf("expected ErrUnexpectedEOF error, got %v", err)
 	}
 }

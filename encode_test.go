@@ -3,48 +3,43 @@ package imagefile
 import (
 	"bytes"
 	"image"
-	"image/draw"
 	"testing"
 )
 
 func TestEncode(t *testing.T) {
-	w := new(bytes.Buffer)
-	m := image.NewRGBA(image.Rect(0, 0, 3, 3))
-
-	m.Set(0, 0, r)
-	m.Set(0, 1, b)
-	m.Set(0, 2, g)
-	m.Set(1, 0, g)
-	m.Set(1, 1, r)
-	m.Set(1, 2, b)
-	m.Set(2, 0, b)
-	m.Set(2, 1, g)
-	m.Set(2, 2, r)
-
-	if err := Encode(w, m); err != nil {
-		t.Fatalf(`unexpected error: %v`, err)
+	img := image.NewRGBA(image.Rect(0, 0, 3, 3))
+	for x := 0; x < 3; x++ {
+		for y := 0; y < 3; y++ {
+			img.Set(x, y, imagePixels[y][x])
+		}
 	}
 
-	if !bytes.Equal(w.Bytes(), imagefileData) {
-		t.Fatalf(`w.Bytes() != imagefileData`)
+	var buf bytes.Buffer
+	err := Encode(&buf, img)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(imageData, buf.Bytes()) {
+		t.Fatal("encoding error")
 	}
 }
 
-func BenchmarkEncode(benchmark *testing.B) {
-	m := image.NewRGBA(image.Rect(0, 0, 1000, 1000))
+func TestEncode64(t *testing.T) {
+	img := image.NewRGBA64(image.Rect(0, 0, 3, 3))
+	for x := 0; x < 3; x++ {
+		for y := 0; y < 3; y++ {
+			img.SetRGBA64(x, y, imagePixels64[y][x])
+		}
+	}
 
-	draw.Draw(m, m.Bounds(), &image.Uniform{g}, image.ZP, draw.Src)
+	var buf bytes.Buffer
+	err := Encode(&buf, img)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	m.Set(0, 0, r)
-	m.Set(0, 10, b)
-	m.Set(100, 10, r)
-	m.Set(600, 100, b)
-	m.Set(201, 20, b)
-	m.Set(12, 25, r)
-
-	for i := 0; i < benchmark.N; i++ {
-		w := new(bytes.Buffer)
-
-		Encode(w, m)
+	if !bytes.Equal(imageData, buf.Bytes()) {
+		t.Fatal("encoding error")
 	}
 }
