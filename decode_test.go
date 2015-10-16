@@ -99,3 +99,15 @@ func TestDecodeRejectsTruncatedData(t *testing.T) {
 		t.Errorf("expected ErrUnexpectedEOF error, got %v", err)
 	}
 }
+
+func BenchmarkDecodeConfig(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		DecodeConfig(bytes.NewReader(imageData))
+	}
+}
+
+func BenchmarkDecode(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		Decode(bytes.NewReader(imageData))
+	}
+}
