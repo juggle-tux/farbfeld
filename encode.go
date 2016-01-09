@@ -7,7 +7,7 @@ import (
 	"io"
 )
 
-// Encode writes the Image img to w in farbfeld format.
+// Encode writes the Image img to w in Farbfeld format.
 func Encode(w io.Writer, img image.Image) error {
 	bounds := img.Bounds()
 	width := uint32(bounds.Dx())

@@ -8,13 +8,13 @@ import (
 	"io"
 )
 
-// A FormatError reports that the input is not a valid farbfeld.
+// A FormatError reports that the input is not a valid Farbfeld.
 // It is returned by Decode and DecodeConfig when the image header
 // doesn't start with "farbfeld".
 type FormatError string
 
 func (e FormatError) Error() string {
-	return "invalid farbfeld format: " + string(e)
+	return "invalid Farbfeld format: " + string(e)
 }
 
 func decodeConfig(r io.Reader) (int, int, error) {
@@ -34,7 +34,7 @@ func decodeConfig(r io.Reader) (int, int, error) {
 	return int(w), int(h), nil
 }
 
-// Decode reads an farbfeld image from r and returns it as an image.Image.
+// Decode reads an Farbfeld image from r and returns it as an image.Image.
 func Decode(r io.Reader) (image.Image, error) {
 	w, h, err := decodeConfig(r)
 	if err != nil {
@@ -50,7 +50,7 @@ func Decode(r io.Reader) (image.Image, error) {
 	return img, nil
 }
 
-// DecodeConfig returns the color model and dimensions of an farbfeld image without
+// DecodeConfig returns the color model and dimensions of an Farbfeld image without
 // decoding the entire image.
 func DecodeConfig(r io.Reader) (image.Config, error) {
 	w, h, err := decodeConfig(r)

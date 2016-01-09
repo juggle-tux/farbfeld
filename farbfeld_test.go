@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-// TODO: re-add tests, in updated format.
+// TODO: add more tests, in updated format.
 var (
 	imageData   = []byte("farbfeld")
 	red         = color.RGBA{255, 0, 0, 255}

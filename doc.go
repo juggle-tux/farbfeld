@@ -1,4 +1,4 @@
-// Package farbfeld enables reading and writing files
-// in the Suckless farbfeld format:
-// http://git.suckless.org/farbfeld/tree/FORMAT.
+// Package farbfeld implements a Farbfeld decoder and encoder.
+//
+// The Farbfeld specification is at http://git.suckless.org/farbfeld/tree/FORMAT.
 package farbfeld
