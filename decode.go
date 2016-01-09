@@ -34,7 +34,7 @@ func decodeConfig(r io.Reader) (int, int, error) {
 	return int(w), int(h), nil
 }
 
-// Decode reads an Farbfeld image from r and returns it as an image.Image.
+// Decode reads a Farbfeld image from r and returns it as an image.Image.
 func Decode(r io.Reader) (image.Image, error) {
 	w, h, err := decodeConfig(r)
 	if err != nil {
@@ -50,7 +50,7 @@ func Decode(r io.Reader) (image.Image, error) {
 	return img, nil
 }
 
-// DecodeConfig returns the color model and dimensions of an Farbfeld image without
+// DecodeConfig returns the color model and dimensions of a Farbfeld image without
 // decoding the entire image.
 func DecodeConfig(r io.Reader) (image.Config, error) {
 	w, h, err := decodeConfig(r)
