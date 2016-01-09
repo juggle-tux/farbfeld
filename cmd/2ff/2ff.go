@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
-	"image/png"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"os"
 
-	"github.com/mehlon/imagefile"
+	"github.com/mehlon/farbfeld"
 )
 
 func main() {
@@ -14,13 +17,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	img, err := imagefile.Decode(os.Stdin)
+	img, _, err := image.Decode(os.Stdin)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to decode imagefile: %v\n", err)
+		fmt.Fprintf(os.Stderr, "failed to decode input: %v\n", err)
 		os.Exit(1)
 	}
 
-	err = png.Encode(os.Stdout, img)
+	err = farbfeld.Encode(os.Stdout, img)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)

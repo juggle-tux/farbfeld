@@ -1,23 +1,19 @@
-# imagefile
+# farbfeld
 
-[![Build Status](https://travis-ci.org/mehlon/imagefile.svg?branch=master)](https://travis-ci.org/mehlon/imagefile)
-[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/mehlon/imagefile)
+[![Build Status](https://travis-ci.org/mehlon/farbfeld.svg?branch=master)](https://travis-ci.org/mehlon/farbfeld)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/mehlon/farbfeld)
 
-Imagefile is a simple image encoding format from suckless. See [SPECIFICATION](http://git.2f30.org/imagefile/tree/SPECIFICATION).
+Farbfeld is a simple image encoding format from suckless. See [FORMAT](http://git.suckless.org/farbfeld/tree/FORMAT).
 
 ## Installation
 
-    go get -u github.com/mehlon/imagefile
+    go get -u github.com/mehlon/farbfeld
 
-## Public API
-
-- **[func Decode(r io.Reader) (image.Image, error)](https://godoc.org/github.com/mehlon/imagefile#Decode)**
-- **[func DecodeConfig(r io.Reader) (image.Config, error)](https://godoc.org/github.com/mehlon/imagefile#DecodeConfig)**
-- **[func Encode(w io.Writer, img image.Image) error](https://godoc.org/github.com/mehlon/imagefile#Encode)**
+See [godoc](https://godoc.org/github.com/mehlon/farbfeld) for documentation.
 
 ## Usage
 
-**imagefile.Decode (`if2png`)**
+**farbfeld.Decode (`ff2png`)**
 
 ```go
 package main
@@ -27,7 +23,7 @@ import (
 	"image/png"
 	"os"
 
-	"github.com/mehlon/imagefile"
+	"github.com/mehlon/farbfeld"
 )
 
 func main() {
@@ -36,9 +32,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	img, err := imagefile.Decode(os.Stdin)
+	img, err := farbfeld.Decode(os.Stdin)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to decode imagefile: %v\n", err)
+		fmt.Fprintf(os.Stderr, "failed to decode farbfeld: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -50,7 +46,7 @@ func main() {
 }
 ```
 
-**imagefile.Encode (`any2if`)**
+**farbfeld.Encode (`any2ff`)**
 
 ```go
 package main
@@ -63,7 +59,7 @@ import (
 	_ "image/png"
 	"os"
 
-	"github.com/mehlon/imagefile"
+	"github.com/mehlon/farbfeld"
 )
 
 func main() {
@@ -78,7 +74,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = imagefile.Encode(os.Stdout, img)
+	err = farbfeld.Encode(os.Stdout, img)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
@@ -89,4 +85,4 @@ func main() {
 ## License
 
 This package is free and unemcumbered software released into the public domain.
-For more information, see the included [UNLICENSE](https://github.com/mehlon/imagefile/blob/master/UNLICENSE) file.
+For more information, see the included [UNLICENSE](blob/master/UNLICENSE) file.

@@ -1,4 +1,4 @@
-package imagefile
+package farbfeld
 
 import (
 	"bufio"
@@ -7,22 +7,22 @@ import (
 	"io"
 )
 
-// Encode writes the Image img to w in imagefile format.
+// Encode writes the Image img to w in farbfeld format.
 func Encode(w io.Writer, img image.Image) error {
 	bounds := img.Bounds()
 	width := uint32(bounds.Dx())
 	height := uint32(bounds.Dy())
 
-	header := make([]byte, 9+4+4)
-	copy(header, "imagefile")
-	binary.BigEndian.PutUint32(header[9:], width)
-	binary.BigEndian.PutUint32(header[13:], height)
+	header := make([]byte, len("farbfeld")+4+4)
+	copy(header, "farbfeld")
+	binary.BigEndian.PutUint32(header[len("farbfeld"):], width)
+	binary.BigEndian.PutUint32(header[len("farbfeld")+4:], height)
 	_, err := w.Write(header)
 	if err != nil {
 		return err
 	}
 
-	if img, ok := img.(*image.RGBA); ok {
+	if img, ok := img.(*image.RGBA64); ok {
 		_, err = w.Write(img.Pix)
 		return err
 	}
@@ -32,11 +32,11 @@ func Encode(w io.Writer, img image.Image) error {
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
 			r, g, b, a := img.At(x, y).RGBA()
-			_, err := bw.Write([]byte{
-				byte(r / 256),
-				byte(g / 256),
-				byte(b / 256),
-				byte(a / 256),
+			err := binary.Write(bw, binary.BigEndian, []uint16{
+				uint16(r),
+				uint16(g),
+				uint16(b),
+				uint16(a),
 			})
 			if err != nil {
 				return err

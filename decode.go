@@ -1,46 +1,47 @@
-package imagefile
+package farbfeld
 
 import (
+	"bytes"
 	"encoding/binary"
 	"image"
 	"image/color"
 	"io"
 )
 
-// A FormatError reports that the input is not a valid Imagefile.
+// A FormatError reports that the input is not a valid farbfeld.
 // It is returned by Decode and DecodeConfig when the image header
-// doesn't start with "imagefile".
+// doesn't start with "farbfeld".
 type FormatError string
 
 func (e FormatError) Error() string {
-	return "invalid Imagefile format: " + string(e)
+	return "invalid farbfeld format: " + string(e)
 }
 
 func decodeConfig(r io.Reader) (int, int, error) {
-	header := make([]byte, 9+4+4)
+	header := make([]byte, len("farbfeld")+4+4)
 	_, err := io.ReadFull(r, header)
 	if err != nil {
 		return 0, 0, err
 	}
 
-	if string(header[:9]) != "imagefile" {
+	if !bytes.HasPrefix(header, []byte("farbfeld")) {
 		return 0, 0, FormatError("unexpected magic number")
 	}
 
-	w := binary.BigEndian.Uint32(header[9:])
-	h := binary.BigEndian.Uint32(header[13:])
+	w := binary.BigEndian.Uint32(header[len("farbfeld"):])
+	h := binary.BigEndian.Uint32(header[len("farbfeld")+4:])
 
 	return int(w), int(h), nil
 }
 
-// Decode reads an imagefile image from r and returns it as an image.Image.
+// Decode reads an farbfeld image from r and returns it as an image.Image.
 func Decode(r io.Reader) (image.Image, error) {
 	w, h, err := decodeConfig(r)
 	if err != nil {
 		return nil, err
 	}
 
-	img := image.NewRGBA(image.Rect(0, 0, w, h))
+	img := image.NewRGBA64(image.Rect(0, 0, w, h))
 	_, err = io.ReadFull(r, img.Pix)
 	if err != nil {
 		return nil, err
@@ -49,7 +50,7 @@ func Decode(r io.Reader) (image.Image, error) {
 	return img, nil
 }
 
-// DecodeConfig returns the color model and dimensions of an imagefile image without
+// DecodeConfig returns the color model and dimensions of an farbfeld image without
 // decoding the entire image.
 func DecodeConfig(r io.Reader) (image.Config, error) {
 	w, h, err := decodeConfig(r)
@@ -58,12 +59,12 @@ func DecodeConfig(r io.Reader) (image.Config, error) {
 	}
 
 	return image.Config{
-		ColorModel: color.RGBAModel,
+		ColorModel: color.RGBA64Model,
 		Width:      w,
 		Height:     h,
 	}, nil
 }
 
 func init() {
-	image.RegisterFormat("imagefile", "imagefile", Decode, DecodeConfig)
+	image.RegisterFormat("farbfeld", "farbfeld", Decode, DecodeConfig)
 }

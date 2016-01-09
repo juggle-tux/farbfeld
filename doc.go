@@ -1,4 +1,4 @@
-// Package imagefile enables reading and writing files
-// in the Suckless imagefile format:
-// http://git.2f30.org/imagefile/tree/SPECIFICATION.
-package imagefile
+// Package farbfeld enables reading and writing files
+// in the Suckless farbfeld format:
+// http://git.suckless.org/farbfeld/tree/FORMAT.
+package farbfeld
