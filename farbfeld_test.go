@@ -2,9 +2,11 @@ package farbfeld
 
 import (
 	"bytes"
+	"crypto/rand"
 	"image"
 	"image/color"
 	"image/png"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -100,5 +102,28 @@ func TestQuickCheck(t *testing.T) {
 	}
 	if err := quick.Check(f, nil); err != nil {
 		t.Error(err)
+	}
+}
+
+func BenchmarkEncode(b *testing.B) {
+	img := image.NewRGBA64(image.Rect(0, 0, 256, 256))
+	io.ReadFull(rand.Reader, img.Pix)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		var buf bytes.Buffer
+		Encode(&buf, img)
+	}
+}
+
+func BenchmarkDecode(b *testing.B) {
+	img := image.NewRGBA64(image.Rect(0, 0, 256, 256))
+	io.ReadFull(rand.Reader, img.Pix)
+	var buf bytes.Buffer
+	Encode(&buf, img)
+	b.ResetTimer()
+	var r io.Reader
+	for i := 0; i < b.N; i++ {
+		r = bytes.NewReader(buf.Bytes())
+		Decode(r)
 	}
 }
