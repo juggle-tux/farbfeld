@@ -13,10 +13,10 @@ func Encode(w io.Writer, img image.Image) error {
 	width := uint32(bounds.Dx())
 	height := uint32(bounds.Dy())
 
-	header := make([]byte, len("farbfeld")+4+4)
-	copy(header, "farbfeld")
-	binary.BigEndian.PutUint32(header[len("farbfeld"):], width)
-	binary.BigEndian.PutUint32(header[len("farbfeld")+4:], height)
+	header := make([]byte, len(Magic)+4+4)
+	copy(header, Magic)
+	binary.BigEndian.PutUint32(header[len(Magic):], width)
+	binary.BigEndian.PutUint32(header[len(Magic)+4:], height)
 	_, err := w.Write(header)
 	if err != nil {
 		return err
