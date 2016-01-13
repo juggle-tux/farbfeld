@@ -96,7 +96,7 @@ func TestQuickCheck(t *testing.T) {
 		if err != nil {
 			return false
 		}
-		img2, _ := img2raw.(*image.RGBA64)
+		img2 := img2raw.(*image.RGBA64)
 		return bytes.Equal(img1.Pix, img2.Pix)
 	}
 	if err := quick.Check(f, nil); err != nil {
