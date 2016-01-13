@@ -2,12 +2,14 @@ package farbfeld
 
 import (
 	"bytes"
+	"image"
 	"image/color"
 	"image/png"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
+	"testing/quick"
 )
 
 // TODO: add more tests, in updated format.
@@ -75,5 +77,28 @@ func Test(t *testing.T) {
 			continue
 		}
 		
+	}
+}
+
+func TestQuickCheck(t *testing.T) {
+	f := func(w, h uint8, pix [1 << 14]byte) bool {
+		if w == 0 || h == 0 {
+			return true
+		}
+		img1 := image.NewRGBA64(image.Rect(0, 0, int(w>>2), int(h>>2)))
+		copy(img1.Pix, pix[:])
+		var buf bytes.Buffer
+		if Encode(&buf, img1) != nil {
+			return false
+		}
+		img2raw, err := Decode(&buf)
+		if err != nil {
+			return false
+		}
+		img2, _ := img2raw.(*image.RGBA64)
+		return bytes.Equal(img1.Pix, img2.Pix)
+	}
+	if err := quick.Check(f, nil); err != nil {
+		t.Error(err)
 	}
 }
