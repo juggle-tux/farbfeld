@@ -105,12 +105,11 @@ func TestQuickCheck(t *testing.T) {
 }
 
 func BenchmarkEncode(b *testing.B) {
-	img := image.NewRGBA64(image.Rect(0, 0, 256, 256))
+	img := image.NewRGBA64(image.Rect(0, 0, 1<<10, 1<<10))
 	io.ReadFull(rand.Reader, img.Pix)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		var buf bytes.Buffer
-		Encode(&buf, img)
+		Encode(ioutil.Discard, img)
 	}
 }
 

@@ -30,15 +30,22 @@ func Encode(w io.Writer, img image.Image) error {
 	bw := bufio.NewWriter(w)
 
 	var r, g, b, a uint32
-	cols := make([]uint16, 4)
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
 			r, g, b, a = img.At(x, y).RGBA()
-			cols[0] = uint16(r)
-			cols[1] = uint16(g)
-			cols[2] = uint16(b)
-			cols[3] = uint16(a)
-			err = binary.Write(bw, binary.BigEndian, cols)
+			err = binary.Write(bw, binary.BigEndian, uint16(r))
+			if err != nil {
+				return err
+			}
+			err = binary.Write(bw, binary.BigEndian, uint16(g))
+			if err != nil {
+				return err
+			}
+			err = binary.Write(bw, binary.BigEndian, uint16(b))
+			if err != nil {
+				return err
+			}
+			err = binary.Write(bw, binary.BigEndian, uint16(a))
 			if err != nil {
 				return err
 			}
