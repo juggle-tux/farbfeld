@@ -78,7 +78,6 @@ func Test(t *testing.T) {
 			t.Errorf("invalid output for input file %q", "testdata/"+name)
 			continue
 		}
-		
 	}
 }
 
