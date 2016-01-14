@@ -2,12 +2,16 @@ package farbfeld
 
 import (
 	"bytes"
+	"crypto/rand"
+	"image"
 	"image/color"
 	"image/png"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
+	"testing/quick"
 )
 
 // TODO: add more tests, in updated format.
@@ -74,6 +78,50 @@ func Test(t *testing.T) {
 			t.Errorf("invalid output for input file %q", "testdata/"+name)
 			continue
 		}
-		
+	}
+}
+
+func TestQuickCheck(t *testing.T) {
+	f := func(w, h uint8, pix [1 << 14]byte) bool {
+		if w == 0 || h == 0 {
+			return true
+		}
+		img1 := image.NewRGBA64(image.Rect(0, 0, int(w>>2), int(h>>2)))
+		copy(img1.Pix, pix[:])
+		var buf bytes.Buffer
+		if Encode(&buf, img1) != nil {
+			return false
+		}
+		img2raw, err := Decode(&buf)
+		if err != nil {
+			return false
+		}
+		img2 := img2raw.(*image.RGBA64)
+		return bytes.Equal(img1.Pix, img2.Pix)
+	}
+	if err := quick.Check(f, nil); err != nil {
+		t.Error(err)
+	}
+}
+
+func BenchmarkEncode(b *testing.B) {
+	img := image.NewRGBA64(image.Rect(0, 0, 1<<10, 1<<10))
+	io.ReadFull(rand.Reader, img.Pix)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Encode(ioutil.Discard, img)
+	}
+}
+
+func BenchmarkDecode(b *testing.B) {
+	img := image.NewRGBA64(image.Rect(0, 0, 256, 256))
+	io.ReadFull(rand.Reader, img.Pix)
+	var buf bytes.Buffer
+	Encode(&buf, img)
+	b.ResetTimer()
+	var r io.Reader
+	for i := 0; i < b.N; i++ {
+		r = bytes.NewReader(buf.Bytes())
+		Decode(r)
 	}
 }

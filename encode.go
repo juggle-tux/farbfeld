@@ -13,10 +13,10 @@ func Encode(w io.Writer, img image.Image) error {
 	width := uint32(bounds.Dx())
 	height := uint32(bounds.Dy())
 
-	header := make([]byte, len("farbfeld")+4+4)
-	copy(header, "farbfeld")
-	binary.BigEndian.PutUint32(header[len("farbfeld"):], width)
-	binary.BigEndian.PutUint32(header[len("farbfeld")+4:], height)
+	header := make([]byte, len(Magic)+4+4)
+	copy(header, Magic)
+	binary.BigEndian.PutUint32(header[len(Magic):], width)
+	binary.BigEndian.PutUint32(header[len(Magic)+4:], height)
 	_, err := w.Write(header)
 	if err != nil {
 		return err
@@ -29,15 +29,23 @@ func Encode(w io.Writer, img image.Image) error {
 
 	bw := bufio.NewWriter(w)
 
+	var r, g, b, a uint32
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			r, g, b, a := img.At(x, y).RGBA()
-			err := binary.Write(bw, binary.BigEndian, []uint16{
-				uint16(r),
-				uint16(g),
-				uint16(b),
-				uint16(a),
-			})
+			r, g, b, a = img.At(x, y).RGBA()
+			err = binary.Write(bw, binary.BigEndian, uint16(r))
+			if err != nil {
+				return err
+			}
+			err = binary.Write(bw, binary.BigEndian, uint16(g))
+			if err != nil {
+				return err
+			}
+			err = binary.Write(bw, binary.BigEndian, uint16(b))
+			if err != nil {
+				return err
+			}
+			err = binary.Write(bw, binary.BigEndian, uint16(a))
 			if err != nil {
 				return err
 			}

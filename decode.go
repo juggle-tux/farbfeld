@@ -18,18 +18,18 @@ func (e FormatError) Error() string {
 }
 
 func decodeConfig(r io.Reader) (int, int, error) {
-	header := make([]byte, len("farbfeld")+4+4)
+	header := make([]byte, len(Magic)+4+4)
 	_, err := io.ReadFull(r, header)
 	if err != nil {
 		return 0, 0, err
 	}
 
-	if !bytes.HasPrefix(header, []byte("farbfeld")) {
+	if !bytes.HasPrefix(header, []byte(Magic)) {
 		return 0, 0, FormatError("unexpected magic number")
 	}
 
-	w := binary.BigEndian.Uint32(header[len("farbfeld"):])
-	h := binary.BigEndian.Uint32(header[len("farbfeld")+4:])
+	w := binary.BigEndian.Uint32(header[len(Magic):])
+	h := binary.BigEndian.Uint32(header[len(Magic)+4:])
 
 	return int(w), int(h), nil
 }
@@ -66,5 +66,5 @@ func DecodeConfig(r io.Reader) (image.Config, error) {
 }
 
 func init() {
-	image.RegisterFormat("farbfeld", "farbfeld", Decode, DecodeConfig)
+	image.RegisterFormat(Magic, Magic, Decode, DecodeConfig)
 }

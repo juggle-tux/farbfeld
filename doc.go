@@ -2,3 +2,7 @@
 //
 // The Farbfeld specification is at http://git.suckless.org/farbfeld/tree/FORMAT.
 package farbfeld
+
+const (
+	Magic = "farbfeld"
+)
