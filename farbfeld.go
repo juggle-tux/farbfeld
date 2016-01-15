@@ -39,19 +39,7 @@ func Encode(w io.Writer, img image.Image) error {
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
 			c := color.NRGBA64Model.Convert(img.At(x, y)).(color.NRGBA64)
-			err = binary.Write(bw, binary.BigEndian, c.R)
-			if err != nil {
-				return err
-			}
-			err = binary.Write(bw, binary.BigEndian, c.G)
-			if err != nil {
-				return err
-			}
-			err = binary.Write(bw, binary.BigEndian, c.B)
-			if err != nil {
-				return err
-			}
-			err = binary.Write(bw, binary.BigEndian, c.A)
+			err = binary.Write(bw, binary.BigEndian, [...]uint16{c.R, c.G, c.B, c.A})
 			if err != nil {
 				return err
 			}
