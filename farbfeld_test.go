@@ -104,8 +104,17 @@ func TestQuickCheck(t *testing.T) {
 	}
 }
 
-func BenchmarkEncode(b *testing.B) {
+func BenchmarkEncodeNRGBA64(b *testing.B) {
 	img := image.NewNRGBA64(image.Rect(0, 0, 1<<10, 1<<10))
+	io.ReadFull(rand.Reader, img.Pix)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Encode(ioutil.Discard, img)
+	}
+}
+
+func BenchmarkEncodeRGBA64(b *testing.B) {
+	img := image.NewRGBA64(image.Rect(0, 0, 1<<10, 1<<10))
 	io.ReadFull(rand.Reader, img.Pix)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
