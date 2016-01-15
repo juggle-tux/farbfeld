@@ -4,6 +4,7 @@
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/mehlon/farbfeld)
 
 Farbfeld is a simple image encoding format from suckless.
+
 The Farbfeld specification is at http://git.suckless.org/farbfeld/tree/FORMAT.
 
 ## Installation
@@ -12,8 +13,3 @@ The Farbfeld specification is at http://git.suckless.org/farbfeld/tree/FORMAT.
 
 See [godoc](https://godoc.org/github.com/mehlon/farbfeld) for documentation.
 The interface is the same as for PNG.
-
-## License
-
-This package is free and unemcumbered software released into the public domain.
-For more information, see the included [UNLICENSE](blob/master/UNLICENSE) file.
