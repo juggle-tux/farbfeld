@@ -86,7 +86,7 @@ func TestQuickCheck(t *testing.T) {
 		if w == 0 || h == 0 {
 			return true
 		}
-		img1 := image.NewRGBA64(image.Rect(0, 0, int(w>>2), int(h>>2)))
+		img1 := image.NewNRGBA64(image.Rect(0, 0, int(w>>2), int(h>>2)))
 		copy(img1.Pix, pix[:])
 		var buf bytes.Buffer
 		if Encode(&buf, img1) != nil {
@@ -96,7 +96,7 @@ func TestQuickCheck(t *testing.T) {
 		if err != nil {
 			return false
 		}
-		img2 := img2raw.(*image.RGBA64)
+		img2 := img2raw.(*image.NRGBA64)
 		return bytes.Equal(img1.Pix, img2.Pix)
 	}
 	if err := quick.Check(f, nil); err != nil {
@@ -105,7 +105,7 @@ func TestQuickCheck(t *testing.T) {
 }
 
 func BenchmarkEncode(b *testing.B) {
-	img := image.NewRGBA64(image.Rect(0, 0, 1<<10, 1<<10))
+	img := image.NewNRGBA64(image.Rect(0, 0, 1<<10, 1<<10))
 	io.ReadFull(rand.Reader, img.Pix)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -114,7 +114,7 @@ func BenchmarkEncode(b *testing.B) {
 }
 
 func BenchmarkDecode(b *testing.B) {
-	img := image.NewRGBA64(image.Rect(0, 0, 256, 256))
+	img := image.NewNRGBA64(image.Rect(0, 0, 256, 256))
 	io.ReadFull(rand.Reader, img.Pix)
 	var buf bytes.Buffer
 	Encode(&buf, img)
